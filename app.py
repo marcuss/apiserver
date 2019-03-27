@@ -22,7 +22,6 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flaskext.mysql import MySQL
-import pymysql
 import requests
 
 app = Flask(__name__)
@@ -237,4 +236,4 @@ app.config['MYSQL_DATABASE_HOST'] = config.MYSQL_DATABASE_HOST
 mysql.init_app(app)
 
 if __name__ == '__main__':
-    app.run(debug=config.FLASK_DEBUG, port=config.SERVER_PORT)
+    app.run(debug=config.FLASK_DEBUG, port=config.SERVER_PORT, use_reloader=False)
