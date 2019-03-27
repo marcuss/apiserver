@@ -67,29 +67,31 @@ def get_company_by_number(company_number):
         cursor.execute(
             "SELECT * FROM company_data "
             "WHERE company_data.CompanyNumber = %s ", (company_number,))
-        rows = cursor.fetchall()
+        company_row = cursor.fetchone()
 
-        if len(rows) == 0:
+        live_status = get_company_live_status(company_number)
+        print("Live Status: " + live_status)
+        company_row['CompanyStatus'] = live_status
+
+        if len(company_row) == 0:
             return null
-
-        companies = rows
 
         cursor.execute(
             "SELECT * FROM company_ann_reports "
             "WHERE company_ann_reports.CompanyNumber = %s ", (company_number,))
-        rows = cursor.fetchall()
-
-        companies.append({'reports': rows})
+        report_rows = cursor.fetchall()
 
         cursor.execute(
             "SELECT * FROM sync_payment_analysys "
             "WHERE sync_payment_analysys.CompanyNumber = %s ", (company_number,))
-        single_row = cursor.fetchone()
+        analysys_row = cursor.fetchone()
 
-        companies.append({'analysys': single_row})
+        company = {'reports': report_rows, 'analysys': analysys_row}
+        company.update(company_row)
 
         response = list()
-        response.append({'companies': companies})
+        response.append(company)
+
         return jsonify(response)
     except Exception as e:
         print(e)
@@ -156,16 +158,23 @@ def get_company_by_name(company_name):
         conn.close()
 
 
-def build_company_response(companies, cursor, single_row):
-    single_row['company_status']
-    companies.append(single_row)
-    company_number = extract_company_number(single_row)
-    rows = find_reports_by_company_number(company_number, cursor)
-    companies.append({'reports': rows})
-    single_row = find_analysys_by_company_number(company_number, cursor, single_row)
-    companies.append({'analysys': single_row})
+def build_company_response(companies, cursor, company_row):
+
+    company_number = extract_company_number(company_row)
+    live_status = get_company_live_status(company_number)
+    print("Live Status: " + live_status)
+    company_row['CompanyStatus'] = live_status
+
+    report_rows = find_reports_by_company_number(company_number, cursor)
+
+    analysys_row = find_analysys_by_company_number(company_number, cursor, company_row)
+
+    company = {'reports': report_rows, 'analysys': analysys_row}
+    company.update(company_row)
+
     response = list()
-    response.append({'companies': companies})
+    response.append(company)
+
     return response
 
 
@@ -198,8 +207,6 @@ def find_by_partial_name(cursor, partial):
 
 def get_company_live_status(company_number):
     try:
-        print(config.CLIENT_SECRET)
-        print(config.LIVE_STATUS_ENDPOINT)
         response =  requests.get(config.LIVE_STATUS_ENDPOINT+"/"+company_number,  auth=(config.CLIENT_SECRET, ''))
         response.raise_for_status()
         json_response = response.json()
