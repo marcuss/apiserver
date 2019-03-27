@@ -22,6 +22,7 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flaskext.mysql import MySQL
+import pymysql
 import requests
 
 app = Flask(__name__)
