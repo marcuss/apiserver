@@ -36,3 +36,8 @@ The only prerequisite is an installed python3 so make sure you have Python3.x in
 
 `python3 app.py` 
 
+## How to run it.
+
+`source api_venv/bin/activate`
+
+`python3 app.py` 
