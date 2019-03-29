@@ -37,7 +37,7 @@ The only prerequisite is an installed python3 so make sure you have Python3.x in
 `python3 app.py` 
 
 ## How to run it.
-If it is not installed as a daemon/service on the server it is rung from the CLI/SSH and no where else.
+If it is not installed as a daemon/service on the server it is run from the CLI/SSH and no where else.
 
 `source api_venv/bin/activate`
 
