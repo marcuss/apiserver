@@ -47,7 +47,7 @@ If it is not installed as a daemon/service on the server it is run from the CLI/
 
 ## How to run it as a service all the time
 
-nohup python3 app.py &
+` nohup python3 app.py & `
 
 ## How to stop it from the service running
 
