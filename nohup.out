@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "app.py", line 24, in <module>
+    from flaskext.mysql import MySQL
+ImportError: No module named 'flaskext'
+Traceback (most recent call last):
+  File "app.py", line 24, in <module>
+    from flaskext.mysql import MySQL
+ImportError: No module named 'flaskext'
+Traceback (most recent call last):
+  File "app.py", line 24, in <module>
+    from flaskext.mysql import MySQL
+ImportError: No module named 'flaskext'
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+2019-03-30 08:44:11,665 - werkzeug - INFO -  * Running on http://127.0.0.1:4998/ (Press CTRL+C to quit)
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+2019-03-30 08:44:39,924 - werkzeug - INFO -  * Running on http://127.0.0.1:4998/ (Press CTRL+C to quit)
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+2019-03-30 08:46:00,916 - werkzeug - INFO -  * Running on http://127.0.0.1:4998/ (Press CTRL+C to quit)
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+2019-03-30 08:48:42,838 - werkzeug - INFO -  * Running on http://127.0.0.1:4998/ (Press CTRL+C to quit)
