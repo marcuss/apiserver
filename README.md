@@ -38,9 +38,17 @@ The only prerequisite is an installed python3 so make sure you have Python3.x in
 
 `python3 app.py` 
 
-## How to run it.
+## How to run it from CLI/SSH
 If it is not installed as a daemon/service on the server it is run from the CLI/SSH and no where else.
 
 `source api_venv/bin/activate`
 
 `python3 app.py` 
+
+## How to run it as a service all the time
+
+nohup python3 app.py &
+
+## How to stop it from the service running
+
+ kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1`
