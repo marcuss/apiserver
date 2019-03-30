@@ -47,8 +47,19 @@ If it is not installed as a daemon/service on the server it is run from the CLI/
 
 ## How to run it as a service all the time
 
-nohup python3 app.py &
+` nohup python3 app.py & `
 
 ## How to stop it from the service running
 
- kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1`
+ kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1' ` 
+ 
+ The directory have a built in script to start and stop the service via shell
+
+## Run it via shell script
+Please chose the alternative you want
+
+`./service.sh start`
+
+`./service.sh stop `
+
+`./service.sh status `
