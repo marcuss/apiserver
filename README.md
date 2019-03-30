@@ -51,4 +51,4 @@ nohup python3 app.py &
 
 ## How to stop it from the service running
 
- kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1`
+ kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1' `  (there is  ' at the end that cannot be shown due to the formatting)
