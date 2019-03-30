@@ -22,8 +22,6 @@ https://docs.google.com/document/d/11wG_mnKECgI5veb5yQQC3wIYOLM0w4jHSJAbKOVejW4/
 ## Deployment.
 The only prerequisite is an installed python3 so make sure you have Python3.x installed on your system.
 
-`pip install -r requirements.txt `
-
 `pip install virtualenv`
 
 `python3 -m venv api_venv`
