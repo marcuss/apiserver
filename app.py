@@ -22,6 +22,7 @@ from flask import abort
 from flask import make_response
 from flask import request
 from flaskext.mysql import MySQL
+import datetime
 import pymysql
 import requests
 
@@ -64,9 +65,15 @@ def get_company_by_number(company_number):
     conn = mysql.connect()
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     try:
-        cursor.execute(
-            "SELECT * FROM company_data "
-            "WHERE company_data.CompanyNumber = %s ", (company_number,))
+        a_year_ago = datetime.datetime.now() - datetime.timedelta(days=365)
+        sql_query = "SELECT * " \
+                    "FROM company_data" \
+                    " WHERE `Accounts.LastMadeUpDate` >= {} and company_data.CompanyNumber = '{}' " \
+                    "LIMIT 15".format(a_year_ago.strftime('%Y/%m/%d'), company_number,)
+
+        print(sql_query)
+
+        cursor.execute(sql_query)
         company_row = cursor.fetchone()
 
         live_status = get_company_live_status(company_number)
@@ -78,12 +85,12 @@ def get_company_by_number(company_number):
 
         cursor.execute(
             "SELECT * FROM company_ann_reports "
-            "WHERE company_ann_reports.CompanyNumber = %s ", (company_number,))
+            "WHERE company_ann_reports.CompanyNumber = %s LIMIT 15", (company_number,))
         report_rows = cursor.fetchall()
 
         cursor.execute(
             "SELECT * FROM sync_payment_analysys "
-            "WHERE sync_payment_analysys.CompanyNumber = %s ", (company_number,))
+            "WHERE sync_payment_analysys.CompanyNumber = %s LIMIT 15", (company_number,))
         analysys_row = cursor.fetchone()
 
         company = {'reports': report_rows, 'analysys': analysys_row}
@@ -91,7 +98,6 @@ def get_company_by_number(company_number):
 
         response = list()
         response.append(company)
-
         return jsonify(response)
     except Exception as e:
         print(e)

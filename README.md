@@ -22,6 +22,7 @@ https://docs.google.com/document/d/11wG_mnKECgI5veb5yQQC3wIYOLM0w4jHSJAbKOVejW4/
 ## Deployment.
 The only prerequisite is an installed python3 so make sure you have Python3.x installed on your system.
 
+### ON MAC
 `pip install virtualenv`
 
 `python3 -m venv api_venv`
@@ -36,3 +37,19 @@ The only prerequisite is an installed python3 so make sure you have Python3.x in
 
 `python3 app.py` 
 
+### ON LINUX
+
+`pip install virtualenv`
+
+`python3 -m venv api_venv`
+
+`source api_venv/bin/activate`
+
+`pip install pipenv`
+
+`pipenv install`
+
+```
+kill -9 `netstat -napt| grep LISTEN |  grep 4998 |  awk {'print $7'} | cut -d'/' -f1
+
+`python3 app.py` 
