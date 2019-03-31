@@ -66,10 +66,10 @@ def get_company_by_number(company_number):
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     try:
         a_year_ago = datetime.datetime.now() - datetime.timedelta(days=365)
-        sql_query = "SELECT * " \
-                    "FROM company_data" \
-                    " WHERE `Accounts.LastMadeUpDate` >= {} and company_data.CompanyNumber = '{}' " \
-                    "LIMIT {}".format(a_year_ago.strftime('%Y/%m/%d'), company_number, config.DATA_FETCH_LIMIT)
+        sql_query = " SELECT * " \
+                    " FROM company_data" \
+                    " WHERE `Accounts.LastMadeUpDate` >= {} and company_data.CompanyNumber = '{}' "\
+                    " LIMIT {}".format(a_year_ago.strftime('%Y/%m/%d'), company_number, config.DATA_FETCH_LIMIT)
         logger.debug("QUERY: " + sql_query)
 
         cursor.execute(sql_query)
@@ -83,17 +83,24 @@ def get_company_by_number(company_number):
         if len(company_row) == 0:
             return null
 
-        cursor.execute(
-            "SELECT * FROM company_ann_reports "
-            "WHERE company_ann_reports.CompanyNumber = %s", (company_number,))
-        report_rows = cursor.fetchall()
+        report_rows = list()
+        try:
+            cursor.execute(
+                "SELECT * FROM company_ann_reports "
+                "WHERE company_ann_reports.CompanyNumber = %s", (company_number,))
+            report_rows = cursor.fetchall()
+        except Exception as e:
+            logger.debug(e)
 
-        cursor.execute(
-            "SELECT * FROM sync_payment_analysys "
-            "WHERE sync_payment_analysys.CompanyNumber = %s", (company_number,))
-        analisys_row = cursor.fetchone()
+        try:
+            cursor.execute(
+                "SELECT * FROM financial_analysis "
+                "WHERE financial_analysis.CompanyNumber = %s", (company_number,))
+            analysis_row = cursor.fetchone()
+        except Exception as e:
+            logger.debug(e)
 
-        company = {'reports': report_rows, 'analysys': analisys_row}
+        company = {'reports': report_rows, 'analysys': analysis_row}
         company.update(company_row)
 
         response.append(company)
@@ -109,54 +116,71 @@ def get_company_by_name(company_name):
     cursor = conn.cursor(pymysql.cursors.DictCursor)
     try:
         companies = list()
-        #First search for part of the name
-        splitted = company_name.split()
 
-        if (len(splitted)>1): # companies with more than a word in the name
-            first2words = splitted[0] + " " + splitted[1] + " "
-            logger.debug("First two words: " + first2words)
-            found_companies = find_company_by_partial_name(cursor, first2words)
+        # company_name is already big enough to try a full name search.
+        if(len(company_name) > config.LENGTH_FOR_FULL_NAME_SEARCH):
+            logger.debug("Full name: " + company_name)
+            found_companies = find_company_by_partial_name(cursor, company_name)
             logger.debug("Found {} companies.".format(len(found_companies)))
-            if len(companies)>0:
-                logger.debug("found by partial name.")
+            if len(found_companies)>0:
+                logger.debug("found by full name search.")
                 for company_row in found_companies:
                     company = build_company_response(cursor, company_row)
                     companies.append(company)
                 return jsonify(companies)
-            else:
-                first10 = company_name[0:10]
-                found_companies = find_company_by_partial_name(cursor, first10)
-                logger.debug("Found {} companies.".format(len(found_companies)))
-                if len(found_companies)>0:
-                    logger.debug("found by first 10 letters.")
-                    for company_row in found_companies:
-                        company = build_company_response(cursor, company_row)
-                        companies.append(company)
-                    return jsonify(companies)
 
-                else:
-                    first5 = company_name[0:5]
-                    companies = find_company_by_partial_name(cursor, first5)
-                    logger.debug("Found {} companies.".format(len(companies)))
-                    if len(companies)>0:
-                        logger.debug("found by first 5 letters.")
-                        for company_row in companies:
-                            company = build_company_response(cursor, company_row)
-                            companies.append(company)
-                        return jsonify(companies)
+        # companies with more than a word in the name and the first 2 words have more than 10 characters
+        splitted = company_name.split()
+        if (len(splitted)>1 and  len(splitted[0])+ len(splitted[1]) > 9):
+            first2words = splitted[0] + " " + splitted[1] + " "
+            logger.debug("First two words: " + first2words)
+            found_companies = find_company_by_partial_name(cursor, first2words)
+            logger.debug("Found {} companies.".format(len(found_companies)))
+            if len(found_companies)>0:
+                logger.debug("found by first two word of the name.")
+                for company_row in found_companies:
+                    company = build_company_response(cursor, company_row)
+                    companies.append(company)
+                return jsonify(companies)
 
-                    else:
-                        return null
-        else: # companies with only a word in the name.
-            logger.debug("found by full name.")
-            companies = find_company_by_partial_name(cursor, company_name)
+        # Search with the 10 first letters including spaces and symbols.
+        if(len(company_name) >= 10):
+            first10 = company_name[0:10]
+            logger.debug("First 10 letters: " + first10)
+            found_companies = find_company_by_partial_name(cursor, first10)
+            logger.debug("Found {} companies.".format(len(found_companies)))
+            if len(found_companies)>0:
+                logger.debug("found by first 10 letters.")
+                for company_row in found_companies:
+                    company = build_company_response(cursor, company_row)
+                    companies.append(company)
+                return jsonify(companies)
+
+        # Search with the 10 first letters including spaces and symbols.
+        if(len(company_name) >= 5):
+            first5 = company_name[0:5]
+            logger.debug("First 10 letters: " + first5)
+            companies = find_company_by_partial_name(cursor, first5)
             logger.debug("Found {} companies.".format(len(companies)))
             if len(companies)>0:
-                logger.debug("found by full name search.")
-                response = build_company_response(cursor, company_row)
-                return jsonify(response)
-            else:
-                return null
+                logger.debug("found by first 5 letters.")
+                for company_row in companies:
+                    company = build_company_response(cursor, company_row)
+                    companies.append(company)
+                return jsonify(companies)
+
+        # Everything goes.
+        logger.debug("found by full name.")
+        found_companies = find_company_by_partial_name(cursor, company_name)
+        logger.debug("Found {} companies.".format(len(found_companies)))
+        if len(found_companies)>0:
+            logger.debug("found by full name search.")
+            for company_row in companies:
+                company = build_company_response(cursor, company_row)
+                companies.append(company)
+            return jsonify(companies)
+        else:
+            return null
 
     except Exception as e:
         print(e)
@@ -175,9 +199,9 @@ def build_company_response(cursor, company_row):
 
     report_rows = find_reports_by_company_number(company_number, cursor)
 
-    analisys_row = find_analysys_by_company_number(company_number, cursor, company_row)
+    analysis_row = find_analysis_by_company_number(company_number, cursor, company_row)
 
-    company = {'reports': report_rows, 'analysys': analisys_row}
+    company = {'reports': report_rows, 'analysys': analysis_row}
     company.update(company_row)
     logger.debug("Company number: "+  company_number)
     return company
@@ -187,10 +211,10 @@ def extract_company_number(single_row):
     return single_row.get("CompanyNumber", None)
 
 
-def find_analysys_by_company_number(company_number, cursor, single_row):
+def find_analysis_by_company_number(company_number, cursor, single_row):
     cursor.execute(
-        "SELECT * FROM sync_payment_analysys "
-        "WHERE sync_payment_analysys.CompanyNumber = %s ", (company_number,))
+        "SELECT * FROM financial_analysis "
+        "WHERE financial_analysis.CompanyNumber = %s ", (company_number,))
     single_row = cursor.fetchone()
     return single_row
 
@@ -206,7 +230,10 @@ def find_reports_by_company_number(company_number, cursor):
 def find_company_by_partial_name(cursor, partial):
     sql_query = "SELECT * FROM company_data " \
                 "WHERE company_data.CompanyName " \
-                "LIKE '{}%' LIMIT {}".format(partial.strip(), config.DATA_FETCH_LIMIT)
+                "LIKE '{}%' " \
+                "ORDER BY IncorporationDate DESC " \
+                "LIMIT {} " \
+                .format(partial.strip(), config.DATA_FETCH_LIMIT)
     logger.debug("QUERY: " + sql_query)
     cursor.execute(sql_query)
     multiple_rows = cursor.fetchall()
