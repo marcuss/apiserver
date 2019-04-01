@@ -77,7 +77,7 @@ def get_company_by_number(company_number):
 
         response = list()
         live_status = get_company_live_status(company_number)
-        print("Live Status: " + live_status)
+        logger.debug("Live Status: " + live_status)
         company_row['CompanyStatus'] = live_status
 
         if len(company_row) == 0:
@@ -193,9 +193,7 @@ def build_company_response(cursor, company_row):
     logger.debug("Build company response")
     company_number = extract_company_number(company_row)
     logger.debug("Company number: " + company_number)
-    live_status = get_company_live_status(company_number)
-    logger.debug("Live Status: " + live_status)
-    company_row['CompanyStatus'] = live_status
+    update_company_live_status(company_number, cursor, company_row)
 
     report_rows = find_reports_by_company_number(company_number, cursor)
 
@@ -207,11 +205,31 @@ def build_company_response(cursor, company_row):
     return company
 
 
+def update_company_live_status(company_number, cursor, company_row):
+    last_updated = company_row['CompanyStatusUpdatedAt']
+    a_day_ago = datetime.datetime.now() - datetime.timedelta(hours=24)
+
+    if (last_updated < a_day_ago):
+        live_status = get_company_live_status(company_number)
+        logger.debug("Live Status: " + live_status)
+        company_row['CompanyStatus'] = live_status
+
+        sql_update_query = "UPDATE company_data set CompanyStatus = '{}' where CompanyNumber = '{}' LIMIT 1"\
+            .format(live_status, company_number)
+        logger.debug("QUERY: " + sql_update_query)
+        cursor.execute(sql_update_query)
+
+        sql_update_query = "UPDATE company_data set CompanyStatusUpdatedAt = '{}' where CompanyNumber = '{}' LIMIT 1" \
+            .format(datetime.datetime.now(), company_number)
+        logger.debug("QUERY: " + sql_update_query)
+        cursor.execute(sql_update_query)
+
+
 def extract_company_number(single_row):
     return single_row.get("CompanyNumber", None)
 
 
-def find_analysis_by_company_number(company_number, cursor, single_row):
+def find_analysis_by_company_number(company_number, cursor, n):
     cursor.execute(
         "SELECT * FROM financial_analysis "
         "WHERE financial_analysis.CompanyNumber = %s ", (company_number,))
@@ -238,6 +256,7 @@ def find_company_by_partial_name(cursor, partial):
     cursor.execute(sql_query)
     multiple_rows = cursor.fetchall()
     return multiple_rows
+
 
 def get_company_live_status(company_number):
     try:
